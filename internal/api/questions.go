@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/vakshit/faq/internal/database"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
-
 
 func getAllQuestions(ctx *fiber.Ctx) error {
 	Questions := database.MongoClient.Questions.Collection("Questions")
@@ -51,6 +51,8 @@ func postQuestion(ctx *fiber.Ctx) error {
 	// parsing body into question struct
 	q := new(database.Question)
 	err := ctx.BodyParser(q)
+	q.CreatedAt = time.Now()
+	q.UpdatedAt = time.Now()
 	if err != nil {
 		log.Printf("Unable to parse question: %v", err)
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprint(err))
@@ -80,14 +82,16 @@ func answerQuestion(ctx *fiber.Ctx) error {
 	}
 	// checking if question is empty
 	q.Question = strings.TrimSpace(q.Question)
-	println(q)
+	// println(q)
 	if len(q.Question) == 0 || q.Approved != true {
 		log.Println("Question empty or not approved")
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprint(err))
 	}
 	// Updating DB
 	filter := bson.D{{Key: "_id", Value: q.ID}}
-	update := bson.D{{Key: "$set", Value: bson.D{{Key: "answer", Value: q.Answer}}}}
+	// update := bson.D{{Key: "$set", Value: bson.D{{Key: "answer", Value: q.Answer}}}}
+	update := bson.D{{Key: "$set", Value: bson.D{bson.E{Key: "answer", Value: q.Answer}, bson.E{Key: "updatedAt", Value: time.Now()}, bson.E{Key: "approved", Value: q.Approved}}}}
+
 	_, err = Questions.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		log.Printf("Unable to answer question: %v", err)
