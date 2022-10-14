@@ -58,7 +58,7 @@ func postQuestion(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprint(err))
 	}
 	q.Question = strings.TrimSpace(q.Question)
-	if len(q.Question) == 0 || q.Approved != false {
+	if len(q.Question) == 0 || q.Approved {
 		log.Println("Question empty or already approved")
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprint(err))
 	}
@@ -83,7 +83,7 @@ func answerQuestion(ctx *fiber.Ctx) error {
 	// checking if question is empty
 	q.Question = strings.TrimSpace(q.Question)
 	// println(q)
-	if len(q.Question) == 0 || q.Approved != true {
+	if len(q.Question) == 0 || !q.Approved {
 		log.Println("Question empty or not approved")
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprint(err))
 	}
